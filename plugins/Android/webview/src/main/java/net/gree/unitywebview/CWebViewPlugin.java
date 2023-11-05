@@ -89,6 +89,9 @@ import java.util.regex.Pattern;
 
 import com.unity3d.player.UnityPlayer;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 class CWebViewPluginInterface {
     private CWebViewPlugin mPlugin;
     private String mGameObject;
@@ -560,14 +563,30 @@ public class CWebViewPlugin extends Fragment {
                     webView.loadUrl("about:blank");
                     canGoBack = webView.canGoBack();
                     canGoForward = webView.canGoForward();
-                    mWebViewPlugin.call("CallOnError", errorCode + "\t" + description + "\t" + failingUrl);
+                    try {
+                        JSONObject data = new JSONObject();
+                        data.put("errorCode", errorCode);
+                        data.put("description", description);
+                        data.put("url", failingUrl);
+                        mWebViewPlugin.call("CallOnError", data.toString());
+                    } catch (JSONException e) {
+                        mWebViewPlugin.call("CallOnError", e.getMessage());
+                    }
                 }
 
                 @Override
                 public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
                     canGoBack = webView.canGoBack();
                     canGoForward = webView.canGoForward();
-                    mWebViewPlugin.call("CallOnHttpError", Integer.toString(errorResponse.getStatusCode()));
+                    try {
+                        JSONObject data = new JSONObject();
+                        data.put("url", request.getUrl());
+                        data.put("mimeType", errorResponse.getMimeType());
+                        data.put("statusCode", errorResponse.getStatusCode());
+                        mWebViewPlugin.call("CallOnHttpError", data.toString());
+                    } catch (JSONException e) {
+                        mWebViewPlugin.call("CallOnError", e.getMessage());
+                    }
                 }
 
                 @Override
