@@ -1,15 +1,15 @@
 /*
  * Copyright (C) 2011 Keijiro Takahashi
  * Copyright (C) 2012 GREE, Inc.
- * 
+ *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
  * arising from the use of this software.
- * 
+ *
  * Permission is granted to anyone to use this software for any purpose,
  * including commercial applications, and to alter it and redistribute it
  * freely, subject to the following restrictions:
- * 
+ *
  * 1. The origin of this software must not be misrepresented; you must not
  *    claim that you wrote the original software. If you use this software
  *    in a product, an acknowledgment in the product documentation would be
@@ -59,6 +59,7 @@ public class WebViewObject : MonoBehaviour
     Callback onLoaded;
     Callback onHooked;
     Callback onCookies;
+    public Action<List<string>> onPermissions;
     bool paused;
     bool visibility;
     bool alertDialogEnabled;
@@ -84,7 +85,7 @@ public class WebViewObject : MonoBehaviour
     IntPtr webView;
 #elif UNITY_ANDROID
     AndroidJavaObject webView;
-    
+
     bool mVisibility;
     int mKeyboardVisibleHeight;
     int mWindowVisibleDisplayFrameHeight;
@@ -93,7 +94,7 @@ public class WebViewObject : MonoBehaviour
     float androidNetworkReachabilityCheckT0 = -1.0f;
     NetworkReachability? androidNetworkReachability0 = null;
 #endif
-    
+
     void OnApplicationPause(bool paused)
     {
         this.paused = paused;
@@ -207,7 +208,7 @@ public class WebViewObject : MonoBehaviour
             SetMargins(mMarginLeft, mMarginTop, mMarginRight, mMarginBottom, mMarginRelative);
         }
     }
-    
+
     /// Called from Java native plugin to request permissions for the file chooser.
     public void RequestFileChooserPermissions()
     {
@@ -245,6 +246,10 @@ public class WebViewObject : MonoBehaviour
         {
             permissions.Add(Permission.Camera);
         }
+
+        // allow to customize permissions
+        onPermissions?.Invoke(permissions);
+
         if (permissions.Count > 0)
         {
 #if UNITY_2020_2_OR_NEWER
@@ -1302,7 +1307,7 @@ public class WebViewObject : MonoBehaviour
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE
         if (webView == IntPtr.Zero)
             return null;
-        return _CWebViewPlugin_GetCustomHeaderValue(webView, headerKey);  
+        return _CWebViewPlugin_GetCustomHeaderValue(webView, headerKey);
 #elif UNITY_ANDROID
         if (webView == null)
             return null;
